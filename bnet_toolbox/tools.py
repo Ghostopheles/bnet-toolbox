@@ -9,13 +9,32 @@ USER_AGENT = "phoenix-agent/1.0"
 HEADERS = {"User-Agent": USER_AGENT, "Content-Type": "application/json"}
 
 PATCH_URL = "http://us.patch.battle.net:1119"
-AGENT_URL = "http://127.0.0.1:1120"
+AGENT_ADDR = "http://127.0.0.1"
+AGENT_PORT = 1120
+AGENT_URL = f"{AGENT_ADDR}:{AGENT_PORT}"
 
 client = httpx.Client(base_url=AGENT_URL)
 app = typer.Typer(name="bnet", add_completion=False)
 console = Console()
 
 GAME_DATA_CACHE = {}
+
+
+def is_agent_accessible() -> bool:
+    while True:
+        try:
+            client.get("/", headers=HEADERS, timeout=1)
+            return True
+        except httpx.ConnectError:
+            if AGENT_PORT >= 7000:
+                break
+
+            if AGENT_PORT == 1120:
+                AGENT_PORT = 6881
+            else:
+                AGENT_PORT += 1
+
+    return False
 
 
 def is_authenticated() -> bool:
@@ -25,6 +44,12 @@ def is_authenticated() -> bool:
 def auth():
     if is_authenticated():
         return
+
+    if not is_agent_accessible():
+        print(
+            "Unable to establish a connection with the Agent process. Ensure Agent.exe is running, then try again."
+        )
+        exit(1)
 
     print("Authenticating...")
     res = client.get("/agent")
