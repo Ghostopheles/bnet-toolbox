@@ -1,6 +1,6 @@
 [project]
 name = "bnet_toolbox"
-version = "0.0.1"
+version = "0.0.2"
 description = "A command-line toolbox for interacting with the Battle.net client and Agent"
 authors = [
     { name="Ghostopheles", email="ghost@ghst.tools"}
@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 requires-python = ">= 3.12"
-dependencies = ["httpx"]
+dependencies = ["httpx", "typer"]
 
 [project.scripts]
 bnet = "bnet_toolbox:handle_cli"

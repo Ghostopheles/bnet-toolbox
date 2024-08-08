@@ -1,5 +1,7 @@
 import httpx
-import argparse
+import typer
+
+from rich import print
 
 USER_AGENT = "phoenix-agent/1.0"
 HEADERS = {"User-Agent": USER_AGENT, "Content-Type": "application/json"}
@@ -8,6 +10,7 @@ PATCH_URL = "http://us.patch.battle.net:1119"
 AGENT_URL = "http://127.0.0.1:1120"
 
 client = httpx.Client(base_url=AGENT_URL)
+app = typer.Typer(name="bnet")
 
 GAME_DATA_CACHE = {}
 
@@ -21,9 +24,9 @@ def auth():
         return
 
     print("Authenticating...")
-
     res = client.get("/agent")
     res.raise_for_status()
+    print("Authenticated!")
 
     data = res.json()
     HEADERS["Authorization"] = data["authorization"]
@@ -67,10 +70,15 @@ def game_has_pending_update(product: str):
 
 
 @requires_auth
-def get_install_dir():
+def get_install_summary():
     summary_res = client.get("/game", headers=HEADERS)
     summary_res.raise_for_status()
-    summary = summary_res.json()
+    return summary_res.json()
+
+
+@requires_auth
+def get_install_dir():
+    summary = get_install_summary()
 
     installed_game_name = None
     for name in summary:
@@ -139,45 +147,73 @@ def queue_product_install(product: str):
     res.raise_for_status()
 
 
-def init_and_queue_product_install(args):
-    if args.product is None:
-        print(
-            f"You must specify a product to install. Usage: python {__file__} <product>"
-        )
-        exit(1)
+@requires_auth
+def update_product(product: str):
+    data = {"priority": {"insert_at_head": True, "value": 999}, "uid": product}
+    print(f"Queueing update for {product}...")
+    res = client.post(f"/update/{product}", json=data, headers=HEADERS)
+    res.raise_for_status()
 
-    product = args.product
+
+@requires_auth
+def remove_product(product: str, run_compaction: bool = True):
+    if not is_game_installed(product):
+        print(f"Product '{product}' is not installed.")
+        return
+
+    data = {"run_compaction": run_compaction, "uid": product}
+
+    print(f"Starting uninstall for {product}...")
+    res = client.post(f"/uninstall", json=data, headers=HEADERS)
+    res.raise_for_status()
+
+
+@requires_auth
+def get_game_sessions():
+    res = client.get("/gamesession", headers=HEADERS)
+    res.raise_for_status()
+    return res.json()
+
+
+@app.command(name="install", help="Initializes and installs a new product")
+def cmd_init_and_queue_product_install(product: str):
     if product == "wow":
         product = "wow_enus"
 
     initialize_product(product)
     queue_product_install(product)
-    print(
-        "Configuration complete. You may need to restart the Battle.net client to see the product in the download queue."
-    )
     exit(0)
+
+
+@app.command(name="uninstall", help="Uninstalls a product")
+def cmd_uninstall_product(product: str):
+    if product == "wow":
+        product = "wow_enus"
+
+    remove_product(product)
+    exit(0)
+
+
+@app.command(name="sessions", help="Lists active game sessions")
+def cmd_list_sessions():
+    sessions = get_game_sessions()
+    print(sessions)
+
+
+@app.command(name="products", help="Lists currently installed products")
+def cmd_list_products():
+    summary = get_install_summary()
+    print(summary)
+
+
+@app.command(name="update", help="Updates an installed product")
+def cmd_update_product(product: str):
+    if not is_game_installed(product):
+        print(f"Product '{product}' is not installed.")
+        exit(1)
+
+    update_product(product)
 
 
 def handle_cli():
-    parser = argparse.ArgumentParser(
-        prog="bnet",
-        description="A collection of cadaverous command-line tools for interacting with the Battle.net client (and Agent)",
-    )
-
-    subparsers = parser.add_subparsers(title="commands", dest="command")
-
-    install_parser = subparsers.add_parser(
-        "install", help="Initialize and install a product"
-    )
-    install_parser.add_argument(
-        "product", help="Branch name of the product to install (e.g. 'wowdev')"
-    )
-    install_parser.set_defaults(func=init_and_queue_product_install)
-
-    args, unk = parser.parse_known_args()
-    if not hasattr(args, "func"):
-        print(f"A command is required. For help: python {__file__} -h")
-        exit(1)
-
-    args.func(args)
-    exit(0)
+    app()

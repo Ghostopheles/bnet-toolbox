@@ -6,6 +6,11 @@ pip install bnet-toolbox
 ```
 
 ## Usage
+To view usage and help:
+```
+bnet --help
+```
+
 To install the current WoW beta client:
 ```
 bnet install wow_beta
