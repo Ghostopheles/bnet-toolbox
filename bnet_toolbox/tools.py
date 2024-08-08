@@ -185,7 +185,6 @@ def cmd_init_and_queue_product_install(product: str):
 
     initialize_product(product)
     queue_product_install(product)
-    exit(0)
 
 
 @app.command(name="uninstall", help="Uninstalls a product")
@@ -194,7 +193,6 @@ def cmd_uninstall_product(product: str):
         product = "wow_enus"
 
     remove_product(product)
-    exit(0)
 
 
 @app.command(name="sessions", help="Lists active game sessions")
