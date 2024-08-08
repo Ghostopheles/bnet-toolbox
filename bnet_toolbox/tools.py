@@ -12,7 +12,7 @@ PATCH_URL = "http://us.patch.battle.net:1119"
 AGENT_URL = "http://127.0.0.1:1120"
 
 client = httpx.Client(base_url=AGENT_URL)
-app = typer.Typer(name="bnet")
+app = typer.Typer(name="bnet", add_completion=False)
 console = Console()
 
 GAME_DATA_CACHE = {}
