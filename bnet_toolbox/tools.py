@@ -2,6 +2,8 @@ import httpx
 import typer
 
 from rich import print
+from rich.table import Table
+from rich.console import Console
 
 USER_AGENT = "phoenix-agent/1.0"
 HEADERS = {"User-Agent": USER_AGENT, "Content-Type": "application/json"}
@@ -11,6 +13,7 @@ AGENT_URL = "http://127.0.0.1:1120"
 
 client = httpx.Client(base_url=AGENT_URL)
 app = typer.Typer(name="bnet")
+console = Console()
 
 GAME_DATA_CACHE = {}
 
@@ -197,13 +200,39 @@ def cmd_uninstall_product(product: str):
 @app.command(name="sessions", help="Lists active game sessions")
 def cmd_list_sessions():
     sessions = get_game_sessions()
-    print(sessions)
+    for product, data in sessions.items():
+        console.print(f"Game: [bold magenta]{product}[/bold magenta]")
+        table = Table(show_header=True, header_style="bold blue")
+        table.add_column("index", style="dim", width=6)
+        table.add_column("binary_type", min_width=12)
+        table.add_column("pid", min_width=5)
+        table.add_column("pid_path", min_width=20)
+        table.add_column("request_id", min_width=5)
+        for i in range(len(data)):
+            idx = i + 1
+            idx = str(idx)
+            session = data[idx]
+            table.add_row(
+                idx,
+                session["binary_type"],
+                str(session["pid"]),
+                session["pid_path"],
+                str(session["request_id"]),
+            )
+
+        console.print(table)
 
 
 @app.command(name="products", help="Lists currently installed products")
 def cmd_list_products():
     summary = get_install_summary()
-    print(summary)
+    table = Table(show_header=True, header_style="bold blue")
+    table.add_column("agent_uid")
+    table.add_column("link")
+    for game, data in summary.items():
+        table.add_row(game, data["link"])
+
+    console.print(table)
 
 
 @app.command(name="update", help="Updates an installed product")
