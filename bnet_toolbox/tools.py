@@ -1,6 +1,8 @@
 import httpx
 import typer
 
+from typing import Optional
+
 from rich import print
 from rich.table import Table
 from rich.console import Console
@@ -128,18 +130,18 @@ def get_install_dir():
 @requires_auth
 def is_game_installed(product: str):
     game_data = get_game_data(product)
-    return game_data["installed"]
+    return game_data["installed"] if game_data is not None else False
 
 
 @requires_auth
-def initialize_product(product: str):
+def initialize_product(product: str, tact_product: str):
     if is_game_initialized(product):
         print(f"'{product}' is already initialized")
         return
 
     data = {
-        "instructions_dataset": ["torrent", "win", product, "enUS"],
-        "instructions_patch_url": f"{PATCH_URL}/{product}",
+        "instructions_dataset": ["torrent", "win", tact_product, "enUS"],
+        "instructions_patch_url": f"{PATCH_URL}/{tact_product}",
         "instructions_product": "NGDP",
         "monitor_pid": 0,
         "priority": {"insert_at_head": True, "value": 900},
@@ -207,11 +209,16 @@ def get_game_sessions():
 
 
 @app.command(name="install", help="Initializes and installs a new product")
-def cmd_init_and_queue_product_install(product: str):
+def cmd_init_and_queue_product_install(
+    product: str, tact_product: Optional[str] = None
+):
     if product == "wow":
         product = "wow_enus"
 
-    initialize_product(product)
+    if tact_product is None:
+        tact_product = product
+
+    initialize_product(product, tact_product)
     queue_product_install(product)
 
 
