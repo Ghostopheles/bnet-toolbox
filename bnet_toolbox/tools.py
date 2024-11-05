@@ -51,10 +51,8 @@ def auth():
         )
         exit(1)
 
-    print("Authenticating...")
     res = client.get("/agent")
     res.raise_for_status()
-    print("Authenticated!")
 
     data = res.json()
     HEADERS["Authorization"] = data["authorization"]
