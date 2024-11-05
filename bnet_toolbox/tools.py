@@ -86,10 +86,7 @@ def get_game_data(product: str):
 
     game_res = client.get(f"/game/{product}", headers=HEADERS)
     if game_res.status_code != 200:
-        print(
-            f"Unable to fetch game data for {product} - are you sure this is the correct Agent UID?"
-        )
-        exit(1)
+        return None
 
     game_data = game_res.json()
     GAME_DATA_CACHE[product] = game_data
