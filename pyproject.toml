@@ -1,6 +1,6 @@
 [project]
 name = "bnet_toolbox"
-version = "0.0.2"
+version = "0.0.3"
 description = "A command-line toolbox for interacting with the Battle.net client and Agent"
 authors = [
     { name="Ghostopheles", email="ghost@ghst.tools"}
