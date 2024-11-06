@@ -18,6 +18,8 @@ Current Commands:
 - `update <agent_uid>`: Updates a product
 - `products`: Lists the currently installed products
 - `sessions`: Lists active game sessions
+- `repair`: Requests repair of an installed product
+- `hardware`: Returns some hardware information
 
 > [!TIP]
 > The product IDs that Agent uses (agent_uids) are not the same as those that TACT uses. Most of the IDs will end up being the same, but some won't match.
