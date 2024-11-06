@@ -1,5 +1,6 @@
 import httpx
 import typer
+import json
 
 from typing import Optional
 
@@ -221,6 +222,25 @@ def get_game_sessions():
     return res.json()
 
 
+@requires_auth
+def get_hardware_info():
+    res = client.get("/hardware", headers=HEADERS)
+    res.raise_for_status()
+    return res.json()
+
+
+@requires_auth
+def repair_product(product: str):
+    if not is_game_installed(product):
+        print(f"Product '{product}' is not installed.")
+        return
+
+    data = {"priority": {"insert_at_head": True, "value": 1000}, "uid": product}
+
+    res = client.post("/repair", json=data, headers=HEADERS)
+    res.raise_for_status()
+
+
 @app.command(name="install", help="Initializes and installs a new product")
 def cmd_init_and_queue_product_install(
     product: str, tact_product: Optional[str] = None
@@ -288,6 +308,21 @@ def cmd_update_product(product: str):
         exit(1)
 
     update_product(product)
+
+
+@app.command(name="hardware", help="Returns hardware info for the current machine")
+def cmd_show_hardware():
+    console.print("Hardware Information >>")
+
+    json_str = json.dumps(get_hardware_info())
+    console.print_json(json_str)
+
+
+@app.command(name="repair", help="Requests repair of a product")
+def cmd_repair_product(product: str):
+    console.print(f"Requesting repair for {product}...")
+    repair_product(product)
+    console.print(f"Repair queued.")
 
 
 def handle_cli():
