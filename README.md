@@ -12,7 +12,8 @@ bnet install wow_beta
 ```
 
 Current Commands:
-- `install <agent_uid>`: Installs a product - optionally, provide the TACT product ID with `--tact_product=$product_name_here`
+- `install <agent_uid>`: Installs a product
+  - If the TACT product ID does not match the agent UID, you can provide the TACT product ID with `--tact_product=$product_name_here`
 - `uninstall <agent_uid>`: Uninstalls a product
 - `update <agent_uid>`: Updates a product
 - `products`: Lists the currently installed products
