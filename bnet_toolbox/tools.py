@@ -149,6 +149,20 @@ def initialize_product(product: str, tact_product: str):
     res = client.post("/install", json=data, headers=HEADERS)
     res.raise_for_status()
 
+    form = res.json()["form"]
+    auth_error_code = form["authentication"]["error"]
+    if auth_error_code != 0:
+        error_message = form["authentication"]["error_details"]["error_message"]
+
+        console.print(f"[bold red]Received auth error for {product}[/bold red].")
+        console.print(
+            f'[bold red]Error[/bold red]: {auth_error_code} - "{error_message}"'
+        )
+
+    if not form["finalized"]:
+        console.print(f"[bold red]Failed to initialize {product}[/bold red].")
+        exit(1)
+
 
 @requires_auth
 def queue_product_install(product: str):
