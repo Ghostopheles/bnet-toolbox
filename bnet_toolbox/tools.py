@@ -7,6 +7,7 @@ from typing import Optional
 from rich import print
 from rich.table import Table
 from rich.console import Console
+from rich.prompt import Prompt
 
 USER_AGENT = "phoenix-agent/1.0"
 HEADERS = {"User-Agent": USER_AGENT, "Content-Type": "application/json"}
@@ -109,20 +110,7 @@ def get_install_summary():
 
 @requires_auth
 def get_install_dir():
-    summary = get_install_summary()
-
-    installed_game_name = None
-    for name in summary:
-        if "wow" in name:
-            installed_game_name = name
-            break
-
-    if installed_game_name is None:
-        print("Unable to find World of Warcraft install path")
-        exit(1)
-
-    game_data = get_game_data(installed_game_name)
-    return game_data["install_dir"]
+    return Prompt.ask("Install directory")
 
 
 @requires_auth
@@ -146,7 +134,7 @@ def initialize_product(product: str, tact_product: str):
         "uid": product,
     }
 
-    print(f"Initializing {product}...")
+    console.print(f"Initializing [bold blue]{product}[/bold blue]...")
     res = client.post("/install", json=data, headers=HEADERS)
     res.raise_for_status()
 
@@ -160,11 +148,7 @@ def initialize_product(product: str, tact_product: str):
             + f'[bold red]Error[/bold red] {auth_error_code}: "{error_message}"'
         )
 
-    if not form["finalized"]:
-        console.print(
-            f"[bold red]Failed to initialize[/bold red] [bold blue]{product}[/bold blue]."
-        )
-        exit(1)
+    console.print(f"Initialized [bold blue]{product}[/bold blue]")
 
 
 @requires_auth
